@@ -18,29 +18,49 @@ char cmd;
 TMC2209Stepper driver(&TMC_SERIAL_PORT, R_SENSE, DRIVER_ADDRESS);
 
 void setup() {
-  // put your setup code here, to run once:
-  serialBT.begin("esp32-bt");
-  pinMode(2, OUTPUT); // Set GPIO 2 as output for LED control
+  Serial.begin(115200);
+  while (!Serial);
+  Serial.println("Starting TMC2209 UART Control Example (EN hardwired)");
 
+  // No pinMode(EN_PIN, OUTPUT); or digitalWrite(EN_PIN, HIGH); needed
+
+  TMC_SERIAL_PORT.begin(115200, SERIAL_8N1, TMC_UART_RX_PIN, TMC_UART_TX_PIN);
+
+  delay(100);
+
+  if (driver.test_connection()) {
+    Serial.println("TMC2209 connection successful!");
+  } else {
+    Serial.println("TMC2209 connection FAILED!");
+    while(1);
+  }
+
+  // Configure the driver via UART
+  driver.toff(3);
+  driver.rms_current(800);
+  driver.pwm_mode(true);
+  driver.microsteps(256);
+  driver.pwm_autoscale(true);
+
+  // Driver is already enabled due to hardwired EN to GND
+  Serial.println("TMC2209 configured and always enabled.");
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  if (serialBT.available()){
+  Serial.println("Moving forward...");
+  driver.VACTUAL(20000);
+  delay(3000);
 
-    cmd=serialBT.read();
+  Serial.println("Stopping (holding position)...");
+  driver.VACTUAL(0); // This is how you "stop" movement and hold position
+  delay(2000);
 
-  }
-  if(cmd=='1'){
+  Serial.println("Moving backward...");
+  driver.VACTUAL(-20000);
+  delay(3000);
 
-    digitalWrite(2, HIGH);
-  }
-  if(cmd=='0'){
-
-    digitalWrite(2, LOW);
-  }
-
-  delay(100);
-  
+  Serial.println("Stopping (holding position)...");
+  driver.VACTUAL(0);
+  delay(2000);
 }
 
