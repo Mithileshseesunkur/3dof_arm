@@ -91,7 +91,7 @@ void setup() {
 
   // Initialize UART for TMC2209
   SERIAL_PORT.begin(115200, SERIAL_8N1, SW_RX, SW_TX);
-
+  driver.begin();
   // Enable drivers
   pinMode(EN_PIN, OUTPUT);
   pinMode(EN_PIN_2, OUTPUT);
@@ -99,23 +99,31 @@ void setup() {
   digitalWrite(EN_PIN_2, LOW); // Enable Pitch stepper
 
   // Configure steppers
-  driver.microsteps(16); // Set microstepping to 16
-  stepper.setMaxSpeed(2000); // Set max speed (steps per second)
+  // Enable stealthChop mode for the first driver (Yaw)
+  driver.en_spreadCycle(false);
+  
+  driver.microsteps(64); // Set microstepping to 16
+  stepper.setMaxSpeed(5000); // Set max speed (steps per second)
   stepper.setAcceleration(1000); // Set acceleration (steps per second^2)
   stepper_2.setMaxSpeed(2000);
   stepper_2.setAcceleration(1000);
+
+  // Read the GCONF register to confirm the setting
+  uint32_t gconf_yaw = driver.GCONF();
+  Serial.print("GCONF (Yaw): 0x");
+  Serial.println(gconf_yaw, HEX);
 }
 
 void loop() {
   Serial.println("Moving Yaw & Pitch...");
 
   // Move Yaw stepper forward & backward
-  stepper.move(5000);
+  stepper.move(10000);
   while (stepper.distanceToGo() != 0) {
     stepper.run();
   }
   delay(500);
-  stepper.move(-5000);
+  stepper.move(-10000);
   while (stepper.distanceToGo() != 0) {
     stepper.run();
   }
