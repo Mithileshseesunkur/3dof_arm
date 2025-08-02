@@ -92,6 +92,7 @@ void setup() {
   // Initialize UART for TMC2209
   SERIAL_PORT.begin(115200, SERIAL_8N1, SW_RX, SW_TX);
   driver.begin();
+  driver_2.begin();
   // Enable drivers
   pinMode(EN_PIN, OUTPUT);
   pinMode(EN_PIN_2, OUTPUT);
@@ -101,9 +102,13 @@ void setup() {
   // Configure steppers
   // Enable stealthChop mode for the first driver (Yaw)
   driver.en_spreadCycle(false);
-  
-  driver.microsteps(64); // Set microstepping to 16
-  stepper.setMaxSpeed(5000); // Set max speed (steps per second)
+  driver_2.en_spreadCycle(false);
+
+  driver.microsteps(64); // Set microstepping to 64
+  driver_2.microsteps(16); // Set microstepping to 64 for the second driver (Pitch)
+  driver.rms_current(900); // Set RMS current for Yaw stepper
+  driver_2.rms_current(900); // Set RMS current for Pitch stepper
+  stepper.setMaxSpeed(5000); // Set max speed (steps per seco nd)
   stepper.setAcceleration(1000); // Set acceleration (steps per second^2)
   stepper_2.setMaxSpeed(2000);
   stepper_2.setAcceleration(1000);
@@ -128,16 +133,16 @@ void loop() {
     stepper.run();
   }
 
-  // Move Pitch stepper forward & backward
-  // stepper_2.move(5000);
-  // while (stepper_2.distanceToGo() != 0) {
-  //   stepper_2.run();
-  // }
-  // delay(500);
-  // stepper_2.move(-5000);
-  // while (stepper_2.distanceToGo() != 0) {
-  //   stepper_2.run();
-  // }
+  //Move Pitch stepper forward & backward
+  stepper_2.move(5000);
+  while (stepper_2.distanceToGo() != 0) {
+    stepper_2.run();
+  }
+  delay(500);
+  stepper_2.move(-5000);
+  while (stepper_2.distanceToGo() != 0) {
+    stepper_2.run();
+  }
 
   Serial.println("Completed one movement cycle.");
   delay(2000);
