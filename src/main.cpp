@@ -75,8 +75,8 @@
 #define SERIAL_PORT       Serial2 // TMC2208/TMC2224 HardwareSerial port
 #define R_SENSE           0.11  // SilentStepStick series use 0.11, Watterott TMC5160 uses 0.075
 #define DRIVER_ADDRESS    0b00 // TMC2209 Driver address according to MS1 and MS2
-TMC2209Stepper driver(&SERIAL_PORT, R_SENSE, DRIVER_ADDRESS);
-AccelStepper stepper = AccelStepper(AccelStepper::DRIVER, STEP_PIN, DIR_PIN);
+TMC2209Stepper driver_1(&SERIAL_PORT, R_SENSE, DRIVER_ADDRESS);
+AccelStepper stepper_1 = AccelStepper(AccelStepper::DRIVER, STEP_PIN, DIR_PIN);
 
 #define EN_PIN_2          26  // LOW: Driver enabled. HIGH: Driver disabled
 #define STEP_PIN_2        27  // Step on rising edge
@@ -91,7 +91,7 @@ void setup() {
 
   // Initialize UART for TMC2209
   SERIAL_PORT.begin(115200, SERIAL_8N1, SW_RX, SW_TX);
-  driver.begin();
+  driver_1.begin();
   driver_2.begin();
   // Enable drivers
   pinMode(EN_PIN, OUTPUT);
@@ -101,20 +101,24 @@ void setup() {
 
   // Configure steppers
   // Enable stealthChop mode for the first driver (Yaw)
-  driver.en_spreadCycle(false);
+  driver_1.en_spreadCycle(false);
   driver_2.en_spreadCycle(false);
 
-  driver.microsteps(64); // Set microstepping to 64
-  driver_2.microsteps(16); // Set microstepping to 64 for the second driver (Pitch)
-  driver.rms_current(900); // Set RMS current for Yaw stepper
+  //microstepping
+  driver_1.microsteps(64); // Set microstepping to 8
+  driver_2.microsteps(64); // Set microstepping to 8 for the second driver (Pitch)
+
+  //adjust max current drawn by the driver
+  driver_1.rms_current(1000); // Set RMS current here instead of potentiometer
   driver_2.rms_current(900); // Set RMS current for Pitch stepper
-  stepper.setMaxSpeed(5000); // Set max speed (steps per seco nd)
-  stepper.setAcceleration(1000); // Set acceleration (steps per second^2)
+
+  stepper_1.setMaxSpeed(2000); // Set max speed (steps per seco nd)
+  stepper_1.setAcceleration(1000); // Set acceleration (steps per second^2)
   stepper_2.setMaxSpeed(2000);
   stepper_2.setAcceleration(1000);
 
   // Read the GCONF register to confirm the setting
-  uint32_t gconf_yaw = driver.GCONF();
+  uint32_t gconf_yaw = driver_1.GCONF();
   Serial.print("GCONF (Yaw): 0x");
   Serial.println(gconf_yaw, HEX);
 }
@@ -123,14 +127,14 @@ void loop() {
   Serial.println("Moving Yaw & Pitch...");
 
   // Move Yaw stepper forward & backward
-  stepper.move(10000);
-  while (stepper.distanceToGo() != 0) {
-    stepper.run();
+  stepper_1.move(5000);
+  while (stepper_1.distanceToGo() != 0) {
+    stepper_1.run();
   }
   delay(500);
-  stepper.move(-10000);
-  while (stepper.distanceToGo() != 0) {
-    stepper.run();
+  stepper_1.move(-5000);
+  while (stepper_1.distanceToGo() != 0) {
+    stepper_1.run();
   }
 
   //Move Pitch stepper forward & backward
