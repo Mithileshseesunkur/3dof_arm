@@ -101,21 +101,25 @@ void setup() {
 
   // Configure steppers
   // Enable stealthChop mode for the first driver (Yaw)
-  driver_1.en_spreadCycle(false);
-  driver_2.en_spreadCycle(false);
+  driver_1.en_spreadCycle(true);
+  driver_2.en_spreadCycle(true);
 
   //microstepping
   driver_1.microsteps(64); // Set microstepping to 8
   driver_2.microsteps(64); // Set microstepping to 8 for the second driver (Pitch)
 
   //adjust max current drawn by the driver
-  driver_1.rms_current(1000); // Set RMS current here instead of potentiometer
-  driver_2.rms_current(900); // Set RMS current for Pitch stepper
+  driver_1.rms_current(1200); // Set RMS current here instead of potentiometer
+  driver_2.rms_current(1200); // Set RMS current for Pitch stepper
 
-  stepper_1.setMaxSpeed(2000); // Set max speed (steps per seco nd)
-  stepper_1.setAcceleration(1000); // Set acceleration (steps per second^2)
-  stepper_2.setMaxSpeed(2000);
-  stepper_2.setAcceleration(1000);
+  //TCOOLTHRS
+  driver_1.TCOOLTHRS(0); // Set TCO
+  driver_2.TCOOLTHRS(0); // Set TCOOLTHRS to 2 for Pitch stepper
+
+  stepper_1.setMaxSpeed(10000); // Set max speed (steps per seco nd)
+  stepper_1.setAcceleration(5000); // Set acceleration (steps per second^2)
+  stepper_2.setMaxSpeed(10000);
+  stepper_2.setAcceleration(5000);
 
   // Read the GCONF register to confirm the setting
   uint32_t gconf_yaw = driver_1.GCONF();
@@ -127,23 +131,23 @@ void loop() {
   Serial.println("Moving Yaw & Pitch...");
 
   // Move Yaw stepper forward & backward
-  stepper_1.move(5000);
+  stepper_1.move(50000);
   while (stepper_1.distanceToGo() != 0) {
     stepper_1.run();
   }
   delay(500);
-  stepper_1.move(-5000);
+  stepper_1.move(-50000);
   while (stepper_1.distanceToGo() != 0) {
     stepper_1.run();
   }
 
   //Move Pitch stepper forward & backward
-  stepper_2.move(5000);
+  stepper_2.move(50000);
   while (stepper_2.distanceToGo() != 0) {
     stepper_2.run();
   }
   delay(500);
-  stepper_2.move(-5000);
+  stepper_2.move(-50000);
   while (stepper_2.distanceToGo() != 0) {
     stepper_2.run();
   }
